@@ -30,7 +30,7 @@ class SubnetsPinger extends EventEmitter {
       this.ranges = Object.keys(networkInterfaces)
         .filter(key =>
           !networkInterfaces[key][0].internal && networkInterfaces[key].length >= 2
-          && networkInterfaces[key].some(item => item.family == 'IPv4')
+          && networkInterfaces[key].some(item => item.family == 4)
         )
         .map(key => {
           const { address, netmask } = networkInterfaces[key]
