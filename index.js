@@ -34,7 +34,7 @@ class SubnetsPinger extends EventEmitter {
         )
         .map(key => {
           const { address, netmask } = networkInterfaces[key]
-            .reduce((acc, item) => item.family == 'IPv4' ? item : acc, {});
+            .reduce((acc, item) => item.family == 4 ? item : acc, {});
           const addressNumber = ipUtils.ip2number(address) >>> 0;
           const netmaskNumber = ipUtils.ip2number(netmask) >>> 0;
           const baseAddress = ipUtils.number2ip(addressNumber & netmaskNumber);
