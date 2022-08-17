@@ -6,7 +6,7 @@ const ping = require('ping');
 const ipUtils = require('./ipUtils');
 
 class SubnetsPinger extends EventEmitter {
-  constructor(_ranges) {
+  constructor(_ranges, _niFilter) {
     super();
 
     if (_ranges) {
@@ -26,35 +26,32 @@ class SubnetsPinger extends EventEmitter {
         }
       });
     } else {
-      const networkInterfaces = os.networkInterfaces();
-      this.ranges = Object.keys(networkInterfaces)
-        .filter(key =>
-          !networkInterfaces[key][0].internal && networkInterfaces[key].length >= 2
-          && networkInterfaces[key].some(item => item.family == 4)
-        )
-        .map(key => {
-          const { address, netmask } = networkInterfaces[key]
-            .reduce((acc, item) => item.family == 4 ? item : acc, {});
-          const addressNumber = ipUtils.ip2number(address) >>> 0;
-          const netmaskNumber = ipUtils.ip2number(netmask) >>> 0;
-          const baseAddress = ipUtils.number2ip(addressNumber & netmaskNumber);
-          let bitMask;
+      this.ranges = Object.entries(os.networkInterfaces())
+      .flatMap(([networkInterfaceName, networkInterface]) => networkInterface.flatMap(entry => {
+        if(entry.internal) return [];
+        if(entry.family != 4) return [];
+        if(_niFilter && !_niFilter(entry)) return [];
+        const { address, netmask } = entry;
+        const addressNumber = ipUtils.ip2number(address) >>> 0;
+        const netmaskNumber = ipUtils.ip2number(netmask) >>> 0;
+        const baseAddress = ipUtils.number2ip(addressNumber & netmaskNumber);
+        let bitMask;
 
-          for (let i = 32; i >= 0; i--) {
-            if (netmaskNumber == (0xffffffff << (32 - i)) >>> 0) {
-              bitMask = i;
-            }
+        for (let i = 32; i >= 0; i--) {
+          if (netmaskNumber == (0xffffffff << (32 - i)) >>> 0) {
+            bitMask = i;
           }
+        }
 
-          return {
-            leftBound: bitMask <= 30
-              ? ipUtils.number2ip((addressNumber & netmaskNumber) + 1)
-              : baseAddress,
-            rightBound: bitMask <= 30
-              ? ipUtils.number2ip((addressNumber & netmaskNumber) + Math.pow(2, 32 - bitMask) - 2)
-              : ipUtils.number2ip((addressNumber & netmaskNumber) + Math.pow(2, 32 - bitMask) - 1)
-          };
-        });
+        return [{
+          leftBound: bitMask <= 30
+            ? ipUtils.number2ip((addressNumber & netmaskNumber) + 1)
+            : baseAddress,
+          rightBound: bitMask <= 30
+            ? ipUtils.number2ip((addressNumber & netmaskNumber) + Math.pow(2, 32 - bitMask) - 2)
+            : ipUtils.number2ip((addressNumber & netmaskNumber) + Math.pow(2, 32 - bitMask) - 1)
+        }];
+      }));
     }
   }
 
