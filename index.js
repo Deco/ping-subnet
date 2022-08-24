@@ -29,7 +29,7 @@ class SubnetsPinger extends EventEmitter {
       this.ranges = Object.entries(os.networkInterfaces())
       .flatMap(([networkInterfaceName, networkInterface]) => networkInterface.flatMap(entry => {
         if(entry.internal) return [];
-        if(entry.family != 4) return [];
+        if(![4, "IPv4"].includes(entry.family)) return [];
         if(_niFilter && !_niFilter(entry)) return [];
         const { address, netmask } = entry;
         const addressNumber = ipUtils.ip2number(address) >>> 0;
