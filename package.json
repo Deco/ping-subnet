@@ -6,13 +6,12 @@
   "dependencies": {
     "ping": "git+https://github.com/ubcent/node-ping.git"
   },
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ubcent/ping-subnet.git"
+    "url": "git+https://github.com/Deco/msgreader.git"
   },
   "keywords": [
     "ping",
